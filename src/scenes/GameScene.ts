@@ -50,6 +50,13 @@ export default class GameScene extends Phaser.Scene {
   }
 
   create(): void {
+    // Reset mutable state so replaying after death starts fresh
+    this.health = 3
+    this.invincibleUntil = 0
+    this.wasStabbing = false
+    this.hearts = []
+    this.enemy = null
+
     const TILE = 32
     const mapW = 20
     const mapH = 15
@@ -283,6 +290,22 @@ export default class GameScene extends Phaser.Scene {
     for (let i = 0; i < this.hearts.length; i++) {
       this.hearts[i].setTexture(i < this.health ? 'heart_full' : 'heart_empty')
     }
+
+    if (this.health === 0) {
+      this.onPlayerDeath()
+    }
+  }
+
+  /** Freeze gameplay, fade out, then return to the title screen. */
+  private onPlayerDeath(): void {
+    // Disable further input and enemy movement by pausing physics
+    this.physics.pause()
+    this.player.sprite.setTint(0xff4444)
+
+    this.cameras.main.fade(1200, 0, 0, 0)
+    this.cameras.main.once('camerafadeoutcomplete', () => {
+      this.scene.start('TitleScene')
+    })
   }
 
   // ── enemy management ─────────────────────────────────────────────────────
