@@ -11,6 +11,9 @@ export default class BootScene extends Phaser.Scene {
     // (the sheet is the logical 32x32 design scaled up 10x)
     this.load.spritesheet('player_sheet', 'characters.png', { frameWidth: 320, frameHeight: 320 })
 
+    // Title screen image (320×240)
+    this.load.image('title', 'title.png')
+
     // Load the map tileset: 32×32 tiles with 1px margin and 1px spacing between tiles.
     // Sheet layout: 8 columns × 6 rows (265×199 px total).
     this.load.audio('meow', 'meow.mp3')
@@ -30,6 +33,6 @@ export default class BootScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.scene.start('GameScene')
+    this.scene.start('TitleScene')
   }
 }
