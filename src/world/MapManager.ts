@@ -1,6 +1,7 @@
 import Phaser from 'phaser'
 import Chunk from './Chunk'
 import ChunkStore from './ChunkStore'
+import TilesetCatalog from './TilesetCatalog'
 import type { ChunkTilePosition, LayerName, WorldConfig } from './types'
 
 const EMPTY_TILE = -1
@@ -21,6 +22,7 @@ export default class MapManager {
     private scene: Phaser.Scene,
     private store: ChunkStore,
     private config: WorldConfig,
+    private tileset: TilesetCatalog,
   ) {}
 
   loadChunksAround(chunkX: number, chunkY: number): void {
@@ -47,7 +49,14 @@ export default class MapManager {
       height: this.config.chunkHeight,
     })
 
-    const tileset = map.addTilesetImage('tilesheet', 'tilesheet', this.config.tileSize, this.config.tileSize, 1, 1)
+    const tileset = map.addTilesetImage(
+      this.tileset.textureKey,
+      this.tileset.textureKey,
+      this.tileset.frameWidth,
+      this.tileset.frameHeight,
+      this.tileset.metadata.margin,
+      this.tileset.metadata.spacing,
+    )
     if (!tileset) throw new Error('Unable to create chunk tileset')
 
     const worldX = chunkX * this.config.chunkWidth * this.config.tileSize

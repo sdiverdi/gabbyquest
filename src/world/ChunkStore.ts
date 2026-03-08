@@ -1,19 +1,5 @@
 import Chunk from './Chunk'
-import {
-  COLLISION_TILE,
-  DECOR_TILES,
-  ROUGH,
-  SAND,
-  WALL_B,
-  WALL_BL,
-  WALL_BR,
-  WALL_C,
-  WALL_L,
-  WALL_R,
-  WALL_T,
-  WALL_TL,
-  WALL_TR,
-} from './tileConstants'
+import TilesetCatalog from './TilesetCatalog'
 import type { ChunkData, LayerName, WorldConfig, WorldSaveData } from './types'
 import { CAT_WORLD_X, CAT_WORLD_Y, START_WORLD_X, START_WORLD_Y, WORLD_TILE_HEIGHT, WORLD_TILE_WIDTH } from './worldConfig'
 
@@ -21,7 +7,10 @@ const STORAGE_PREFIX = 'phaser-topdown-chunk'
 const EMPTY_TILE = -1
 
 export default class ChunkStore {
-  constructor(private config: WorldConfig) {}
+  constructor(
+    private config: WorldConfig,
+    private tileset: TilesetCatalog,
+  ) {}
 
   loadChunk(chunkX: number, chunkY: number): Chunk {
     const stored = this.readStoredChunk(chunkX, chunkY)
@@ -96,7 +85,7 @@ export default class ChunkStore {
   private createDefaultChunk(chunkX: number, chunkY: number): ChunkData {
     const tileCount = this.config.chunkWidth * this.config.chunkHeight
     const layers: Record<LayerName, number[]> = {
-      ground: new Array<number>(tileCount).fill(SAND),
+      ground: new Array<number>(tileCount).fill(this.tileset.defaultGroundFrame),
       walls: new Array<number>(tileCount).fill(EMPTY_TILE),
       decor: new Array<number>(tileCount).fill(EMPTY_TILE),
       collision: new Array<number>(tileCount).fill(EMPTY_TILE),
@@ -108,12 +97,14 @@ export default class ChunkStore {
         const worldTileX = chunkX * this.config.chunkWidth + localX
         const worldTileY = chunkY * this.config.chunkHeight + localY
 
-        layers.ground[index] = this.hash(worldTileX, worldTileY, 3) > 0.82 ? ROUGH : SAND
+        layers.ground[index] = this.hash(worldTileX, worldTileY, 3) > 0.82
+          ? this.tileset.roughGroundFrame
+          : this.tileset.defaultGroundFrame
 
         if (!this.isWorldBorder(worldTileX, worldTileY)) continue
 
         layers.walls[index] = this.getBorderWallTile(worldTileX, worldTileY)
-        layers.collision[index] = COLLISION_TILE
+        layers.collision[index] = this.tileset.collisionFrame
       }
     }
 
@@ -148,8 +139,8 @@ export default class ChunkStore {
           if (this.isProtectedTile(worldTileX, worldTileY)) continue
 
           const index = localY * this.config.chunkWidth + localX
-          layers.walls[index] = WALL_C
-          layers.collision[index] = COLLISION_TILE
+          layers.walls[index] = this.tileset.wallFillFrame
+          layers.collision[index] = this.tileset.collisionFrame
           layers.decor[index] = EMPTY_TILE
         }
       }
@@ -169,8 +160,9 @@ export default class ChunkStore {
         const roll = this.hash(worldTileX, worldTileY, 120)
         if (roll < 0.92) continue
 
-        const decor = DECOR_TILES[Math.floor(this.hash(worldTileX, worldTileY, 121) * DECOR_TILES.length)]
-        layers.decor[index] = decor.index
+        const decorFrames = this.tileset.decorFrames
+        const decor = decorFrames[Math.floor(this.hash(worldTileX, worldTileY, 121) * decorFrames.length)]
+        layers.decor[index] = decor
       }
     }
   }
@@ -222,14 +214,14 @@ export default class ChunkStore {
     const maxX = WORLD_TILE_WIDTH - 1
     const maxY = WORLD_TILE_HEIGHT - 1
 
-    if (worldTileX === 0 && worldTileY === 0) return WALL_TL
-    if (worldTileX === maxX && worldTileY === 0) return WALL_TR
-    if (worldTileX === 0 && worldTileY === maxY) return WALL_BL
-    if (worldTileX === maxX && worldTileY === maxY) return WALL_BR
-    if (worldTileY === 0) return WALL_T
-    if (worldTileY === maxY) return WALL_B
-    if (worldTileX === 0) return WALL_L
-    return WALL_R
+    if (worldTileX === 0 && worldTileY === 0) return this.tileset.getBorderFrame('topLeft')
+    if (worldTileX === maxX && worldTileY === 0) return this.tileset.getBorderFrame('topRight')
+    if (worldTileX === 0 && worldTileY === maxY) return this.tileset.getBorderFrame('bottomLeft')
+    if (worldTileX === maxX && worldTileY === maxY) return this.tileset.getBorderFrame('bottomRight')
+    if (worldTileY === 0) return this.tileset.getBorderFrame('top')
+    if (worldTileY === maxY) return this.tileset.getBorderFrame('bottom')
+    if (worldTileX === 0) return this.tileset.getBorderFrame('left')
+    return this.tileset.getBorderFrame('right')
   }
 
   private hash(x: number, y: number, salt: number): number {

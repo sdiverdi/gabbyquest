@@ -5,6 +5,7 @@ import Player from '../player/Player'
 import EditorManager from '../editor/EditorManager'
 import ChunkStore from '../world/ChunkStore'
 import MapManager from '../world/MapManager'
+import TilesetCatalog from '../world/TilesetCatalog'
 import {
   CAT_WORLD_X,
   CAT_WORLD_Y,
@@ -43,8 +44,10 @@ export default class GameScene extends Phaser.Scene {
 
     this.buildPlayerAnimations()
 
-    const store = new ChunkStore(WORLD_CONFIG)
-    this.mapManager = new MapManager(this, store, WORLD_CONFIG)
+    const tileset = TilesetCatalog.fromScene(this)
+
+    const store = new ChunkStore(WORLD_CONFIG, tileset)
+    this.mapManager = new MapManager(this, store, WORLD_CONFIG, tileset)
 
     this.physics.world.setBounds(0, 0, WORLD_PIXEL_WIDTH, WORLD_PIXEL_HEIGHT)
 
@@ -77,7 +80,7 @@ export default class GameScene extends Phaser.Scene {
       right: this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.D),
     }
 
-    this.editor = new EditorManager(this, this.mapManager, WORLD_CONFIG)
+    this.editor = new EditorManager(this, this.mapManager, WORLD_CONFIG, tileset)
 
     this.createHearts()
   }

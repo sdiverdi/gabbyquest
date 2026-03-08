@@ -1,16 +1,9 @@
 import Phaser from 'phaser'
 import MapManager from '../world/MapManager'
-import { COLLISION_TILE, DECOR_TILES, GROUND_TILES, WALL_TILES } from '../world/tileConstants'
-import type { LayerName, PaletteOption, WorldConfig } from '../world/types'
+import TilesetCatalog from '../world/TilesetCatalog'
+import type { LayerName, WorldConfig } from '../world/types'
 
 const LAYER_ORDER: LayerName[] = ['ground', 'walls', 'decor', 'collision']
-
-const PALETTE: Record<LayerName, PaletteOption[]> = {
-  ground: GROUND_TILES,
-  walls: WALL_TILES,
-  decor: DECOR_TILES,
-  collision: [{ index: COLLISION_TILE, label: 'Solid tile' }],
-}
 
 export default class EditorManager {
   private enabled = false
@@ -25,6 +18,7 @@ export default class EditorManager {
     private scene: Phaser.Scene,
     private mapManager: MapManager,
     private config: WorldConfig,
+    private tileset: TilesetCatalog,
   ) {
     this.hoverGraphics = scene.add.graphics().setDepth(1000)
     this.hudText = scene.add.text(8, 8, '', {
@@ -93,13 +87,13 @@ export default class EditorManager {
   }
 
   private cycleSelection(direction: number): void {
-    const options = PALETTE[this.selectedLayer]
+    const options = this.tileset.getPalette(this.selectedLayer)
     this.selectionIndex = Phaser.Math.Wrap(this.selectionIndex + direction, 0, options.length)
     this.refreshHud()
   }
 
   private getSelectedTileIndex(): number {
-    return PALETTE[this.selectedLayer][this.selectionIndex].index
+    return this.tileset.getPalette(this.selectedLayer)[this.selectionIndex].index
   }
 
   private paint(pointer: Phaser.Input.Pointer, tileIndex: number): void {
@@ -124,7 +118,7 @@ export default class EditorManager {
         'collision',
         position.localTileX,
         position.localTileY,
-        tileIndex === -1 ? -1 : COLLISION_TILE,
+        tileIndex === -1 ? -1 : this.tileset.collisionFrame,
       )
     }
 
@@ -142,7 +136,8 @@ export default class EditorManager {
   private refreshHud(): void {
     if (!this.enabled) return
 
-    const option = PALETTE[this.selectedLayer][this.selectionIndex]
+    const palette = this.tileset.getPalette(this.selectedLayer)
+    const option = palette[Math.min(this.selectionIndex, palette.length - 1)]
     this.hudText.setText([
       'EDITOR MODE',
       `Layer ${LAYER_ORDER.indexOf(this.selectedLayer) + 1}: ${this.selectedLayer}`,

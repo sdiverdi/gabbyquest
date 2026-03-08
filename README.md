@@ -24,4 +24,7 @@ The world is now chunked and much larger than the original prototype. Map edits 
 
 Notes:
 - This prototype uses procedural textures so no external assets are required. Replace with your own sprites/tiles later in `assets/`.
+- Tileset metadata now lives in `assets/map.json`. To swap to a different tileset image + metadata file, update `src/world/tilesetConfig.ts`.
+- Generate starter metadata with `npm run generate:tileset -- --image assets/map.png --output assets/map.generated.json --tileWidth 32 --tileHeight 32 --margin 1 --spacing 1`.
+- A reusable Copilot skill for generating new tilemap metadata files lives at `.github/skills/generate-tilemap-metadata/SKILL.md`.
 - Base resolution is 320×240 with a 2× zoom for crisp pixel art.
