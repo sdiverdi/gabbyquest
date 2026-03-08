@@ -85,7 +85,10 @@ export default class Player {
     this.swordGraphics.strokePath()
   }
 
-  update(cursors: Phaser.Types.Input.Keyboard.CursorKeys) {
+  update(
+    cursors: Phaser.Types.Input.Keyboard.CursorKeys,
+    wasd?: { up: Phaser.Input.Keyboard.Key; down: Phaser.Input.Keyboard.Key; left: Phaser.Input.Keyboard.Key; right: Phaser.Input.Keyboard.Key }
+  ) {
     // Stab on spacebar press
     if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
       this.stab()
@@ -101,15 +104,20 @@ export default class Player {
 
     if (!cursors) return
 
-    if (cursors.left?.isDown) {
+    const leftDown = cursors.left?.isDown || wasd?.left.isDown
+    const rightDown = cursors.right?.isDown || wasd?.right.isDown
+    const upDown = cursors.up?.isDown || wasd?.up.isDown
+    const downDown = cursors.down?.isDown || wasd?.down.isDown
+
+    if (leftDown) {
       body.setVelocityX(-this.speed)
-    } else if (cursors.right?.isDown) {
+    } else if (rightDown) {
       body.setVelocityX(this.speed)
     }
 
-    if (cursors.up?.isDown) {
+    if (upDown) {
       body.setVelocityY(-this.speed)
-    } else if (cursors.down?.isDown) {
+    } else if (downDown) {
       body.setVelocityY(this.speed)
     }
 
